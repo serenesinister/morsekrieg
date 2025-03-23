@@ -73,7 +73,7 @@ Um comando especial em código Morse, representado pela sequência **“. - . - 
 
 O circuito a seguir ilustra a disposição dos componentes eletrônicos do **MorseKrieg**, mostrando como cada parte interage para formar o sistema completo.
 
-![Circuito do MorseKrieg](https://drive.google.com/file/d/1i6kTPx1A6kKVvYAB5gMR8F9VL0nM2cQ0/view?usp=drive_link)
+![Circuito do MorseKrieg](https://drive.google.com/file/d/1i6kTPx1A6kKVvYAB5gMR8F9VL0nM2cQ0)
 
 O **MorseKrieg** utiliza os seguintes componentes eletrônicos:
 
