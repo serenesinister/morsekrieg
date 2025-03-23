@@ -71,6 +71,10 @@ Um comando especial em código Morse, representado pela sequência **“. - . - 
 
 ## 3. Componentes Utilizados
 
+O circuito a seguir ilustra a disposição dos componentes eletrônicos do **MorseKrieg**, mostrando como cada parte interage para formar o sistema completo.
+
+![Circuito do MorseKrieg](https://drive.google.com/file/d/1i6kTPx1A6kKVvYAB5gMR8F9VL0nM2cQ0)
+
 O **MorseKrieg** utiliza os seguintes componentes eletrônicos:
 
 - **Arduino**: Para controle central do sistema e execução do código.
@@ -100,7 +104,7 @@ O **MorseKrieg** proporciona uma experiência imersiva, que simula os desafios e
 
 - **Diagrama de Funcionamento no Draw.io**: [Link para o Diagrama no Draw.io](https://viewer.diagrams.net/?tags=%7B%7D&lightbox=1&highlight=0000ff&layers=1&nav=1&title=MorseKrieg.drawio#Uhttps%3A%2F%2Fdrive.google.com%2Fuc%3Fid%3D1tgG7YJqDOauyHudaGi4Mt96fPksYYsdz%26export%3Ddownload#%7B%22pageId%22%3A%22bYg2sIwUH-PpCp0Aj_3V%22%7D)
 - **Repositório no GitHub**: [Link para o Repositório no GitHub](https://github.com/serenesinister/morsekrieg)
-- **Circuito no Tinkercad**: [Link para o Circuito no Tinkercad](https://www.tinkercad.com/things/3OdZ6mru3c9-morsekrieg?sharecode=mjjMoH86qqGMuDnSHXcD04rIFeCH9zL_89Xoxoc-vMw).
+- **Circuito no Tinkercad**: [Link para o Circuito no Tinkercad](https://www.tinkercad.com/things/3OdZ6mru3c9-morsekrieg?sharecode=mjjMoH86qqGMuDnSHXcD04rIFeCH9zL_89Xoxoc-vMw)
 ---
 
-Este projeto foi desenvolvido por **Wemerson Soares**.
+Projeto foi desenvolvido por **Wemerson Soares**.
