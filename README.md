@@ -107,4 +107,4 @@ O **MorseKrieg** proporciona uma experiência imersiva, que simula os desafios e
 - **Circuito no Tinkercad**: [Link para o Circuito no Tinkercad](https://www.tinkercad.com/things/3OdZ6mru3c9-morsekrieg?sharecode=mjjMoH86qqGMuDnSHXcD04rIFeCH9zL_89Xoxoc-vMw)
 ---
 
-Projeto foi desenvolvido por **Wemerson Soares**.
+Desenvolvido por **Wemerson Soares**.
