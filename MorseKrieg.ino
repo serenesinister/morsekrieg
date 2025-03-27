@@ -144,155 +144,136 @@ void reset() {
   lcd_1.print(">>>MorseKrieg<<<");
 }
 
-void loop() {
-  int leituraBotao = digitalRead(botaoPin); //lê o estado do botão
+//verificar o estado do botão e processar o Morse
+void verificarBotao() {
+    int leituraBotao = digitalRead(botaoPin); //lê o estado do botão (HIGH ou LOW)
+    //MODO I (transmissão): entrada via botão
+    if (leituraBotao == HIGH) {
+        //se o modo atual não for o modo 1, muda para o modo 1
+        if (modoAtual != 1) {
+            lcd_1.clear(); //limpa a tela do LCD
+            lcd_1.setCursor(0, 0); //posiciona o cursor no início da tela
+            modoAtual = 1; //define o modo como 1
+        }
+        
+        //se o botão ainda não foi pressionado, registra o tempo de pressionamento
+        if (!botaoPressionado) {
+            tempoPressionado = millis(); //registra o tempo de início da pressão do botão
+            botaoPressionado = true; //marca que o botão foi pressionado
+            tempoInatividade = millis(); //reseta o tempo de inatividade
+        }
 
-  //MODO I: Envio via botão para código Morse
-  if (leituraBotao == HIGH) { // Se o botão está pressionado
-    //verifica se o modo mudou e, se sim, limpa o display
-    if (modoAtual != 1) { //se não está no modo 2
-      lcd_1.clear(); //limpa o display
-      lcd_1.setCursor(0, 0);
-      modoAtual = 1; //atualiza o modo para o modo 2
+        digitalWrite(ledPin, HIGH); //acende o LED
+        tone(buzzerPin, 1000); //emite um tom no buzzer
+    } else {
+        //se o botão não estiver pressionado (estado LOW)
+        if (botaoPressionado) {
+            unsigned long duracao = millis() - tempoPressionado; //calcula a duração do pressionamento do botão
+            botaoPressionado = false; //marca que o botão foi solto
+            digitalWrite(ledPin, LOW); //apaga o LED
+            noTone(buzzerPin); //desliga o buzzer
+            
+            //se a duração for menor que 50ms, é um ponto (.), senão é um traço (-)
+            mensagemMorse += (duracao < 50) ? "." : "-";
+            Serial.print("Morse: "); //imprime a mensagem Morse no monitor serial
+            Serial.println(mensagemMorse);
+        }
     }
-    
-    if (!botaoPressionado) { //se não estava pressionado anteriormente
-      tempoPressionado = millis(); //marca o tempo de início de pressionamento
-      botaoPressionado = true;
-      tempoInatividade = millis(); //reseta o tempo de inatividade ao pressionar o botão
+}
+
+//processar e traduzir a mensagem Morse em letras
+void processarLetra() {
+    //se o tempo de inatividade for maior que o limite e houver mensagem Morse para processar
+    if (millis() - tempoInatividade > limiteInatividade && mensagemMorse.length() > 0) {
+        String letra = morseChar(mensagemMorse); //converte a mensagem Morse para a letra correspondente
+        if (letra != "") { //se a letra for válida
+            palavra += letra; //adiciona a letra à palavra atual
+            lcd_1.setCursor(0, 0);
+            lcd_1.print("transmissao:"); //exibe "transmissao:" no LCD
+            lcd_1.setCursor(0, 1);  
+            lcd_1.print(palavra); //exibe a palavra no LCD
+            if (palavra.length() > 16) lcd_1.scrollDisplayLeft();  // Se a palavra for maior que 16 caracteres, faz a rolagem da tela
+            Serial.print("Chave: "); //imprime a letra traduzida no monitor serial
+            Serial.println(letra);
+        }
+        mensagemMorse = ""; //limpa a mensagem Morse após processar
+        tempoInatividade = millis(); //reseta o tempo de inatividade
+        espacoInserido = false; //reseta o indicador de espaço inserido
     }
-    //o LED fica aceso enquanto o botão está pressionado
-    digitalWrite(ledPin, HIGH);
-    tone(buzzerPin, 1000); //emite som enquanto o botão está pressionado
-  } else { //quando o botão é solto
-    if (botaoPressionado) { //se o botão estava pressionado anteriormente
-      unsigned long duracao = millis() - tempoPressionado; //calcula o tempo de pressionamento
-      botaoPressionado = false;
-      digitalWrite(ledPin, LOW); //apaga o LED
-      noTone(buzzerPin); //para o som
+}
 
-      //determina se foi um ponto ou um traço
-      if (duracao < 50) {
-        mensagemMorse += "."; //ponto (curto)
-      } else {
-        mensagemMorse += "-"; //traço (longo)
-      }
-
-      //exibe o código Morse no monitor serial
-      Serial.print("Morse: ");
-      Serial.println(mensagemMorse); //exibe a sequência em Morse no terminal
-    }
-  }
-
-  //verificar se o tempo de inatividade excedeu o limite para separar letras
-  if (millis() - tempoInatividade > limiteInatividade && mensagemMorse.length() > 0) {
-    //convertendo a mensagem morse para letra
-    String letra = morseChar(mensagemMorse);
-    if (letra != "") {
-        //adiciona a letra à palavra formada
-        palavra += letra;
-
-        //exibe a palavra completa no LCD
+//processar e adicionar um espaço entre palavras
+void processarPalavra() {
+    //se o tempo de inatividade for maior que o dobro do limite e a palavra não tiver um espaço no final
+    if (millis() - tempoInatividade > 2 * limiteInatividade && palavra.length() > 0 && !espacoInserido) {
+        palavra += " "; //adiciona um espaço ao final da palavra
         lcd_1.setCursor(0, 0);
-        lcd_1.print("transmissao:");
+        lcd_1.print("transmissao:"); //exibe "transmissao:" no LCD
         lcd_1.setCursor(0, 1);
-        lcd_1.print(palavra);
+        lcd_1.print(palavra); //exibe a palavra com o espaço no LCD
+        Serial.print("Recado: "); //imprime a palavra no monitor serial
+        Serial.println(palavra);
+        espacoInserido = true; //marca que o espaço foi inserido
+        mensagemMorse = ""; //limpa a mensagem Morse após o espaço
+        tempoInatividade = millis(); //reseta o tempo de inatividade
+    }
+}
 
-        //se a palavra tiver mais de 16 caracteres, inicia o deslocamento
-        if (palavra.length() > 16) {
-            lcd_1.scrollDisplayLeft(); //move o texto para a esquerda
+//verificar e realizar o reset se a mensagem Morse for igual ao comando de reset
+void verificarReset() {
+    if (mensagemMorse == comandoResetMorse) { //se a mensagem Morse for o comando de reset
+        reset(); //realiza o reset do sistema
+        mensagemMorse = ""; //limpa a mensagem Morse
+    }
+}
+
+//processar entrada serial e converter caracteres para Morse
+void processarEntradaSerial() {
+    //MODO II (telegrama): entrada manual via Serial 
+    if (Serial.available()) { //se houver dados disponíveis na porta serial
+        char caractere = Serial.read(); //lê o caractere da entrada serial
+        String codigoMorse = charMorse(caractere); //converte o caractere para o código Morse correspondente
+        
+        //se o modo atual não for o modo 2, muda para o modo 2
+        if (modoAtual != 2) {
+            lcd_1.clear(); //limpa a tela do LCD
+            lcd_1.setCursor(0, 0); //posiciona o cursor no início da tela
+            modoAtual = 2; //define o modo como 2
         }
-
-        //exibe a letra na Serial
-        Serial.print("Chave: ");
-        Serial.println(letra);
-    }
-
-    //resetando a mensagem para a próxima letra
-    mensagemMorse = "";
-    tempoInatividade = millis(); //reseta o tempo de inatividade após a separação de letras
-    espacoInserido = false; //reseta o controle de espaço
-  }
-
-  //verificar se o tempo de inatividade excede o dobro do limite (para separar palavras)
-  if (millis() - tempoInatividade > 2 * limiteInatividade && palavra.length() > 0 && !espacoInserido) {
-    //adiciona um espaço à palavra para separar palavras
-    palavra += " ";
-
-    //exibe a palavra com o espaço no LCD
-    lcd_1.setCursor(0, 0);
-    lcd_1.print("transmissao:");
-    lcd_1.setCursor(0, 1);
-    lcd_1.print(palavra);
-
-    //exibe o espaço na Serial
-    Serial.print("Recado: ");
-    Serial.println(palavra);
-
-    //marcando que o espaço já foi inserido
-    espacoInserido = true;
-
-    //resetando a variável de código Morse e o tempo de inatividade para a próxima palavra
-    mensagemMorse = "";
-    tempoInatividade = millis();  //reseta o tempo de inatividade após a separação de palavras
-  }
-
-  //verifica se o comando de reset foi inserido
-  if (mensagemMorse == comandoResetMorse) {
-    reset(); //chama a função de reset
-    mensagemMorse = ""; //limpa a mensagem após o reset
-  }
-
-  //MODO II: Envio manual via Serial para código Morse
-  if (Serial.available()) {
-    char caractere = Serial.read();
-    String codigoMorse = charMorse(caractere);    
-
-    //verifica se o modo mudou e, se sim, limpa o display
-    if (modoAtual != 2) { //se não está no modo 2
-      lcd_1.clear(); //limpa o display
-      lcd_1.setCursor(0, 0);
-      modoAtual = 2; //atualiza o modo para o modo 2
-    }
-
-    if (codigoMorse != "") {
-      //exibe a letra e seu código Morse no Serial
-      Serial.print(caractere);
-      Serial.print(" -> ");
-      Serial.println(codigoMorse); //exibe a letra e o código Morse no formato Letra -> Código Morse
-
-      //acumula o código Morse com um espaço entre as letras
-      if (morseAcumulado.length() > 0) {
-        morseAcumulado += " "; //adiciona um espaço entre as letras
-      }
-      morseAcumulado += codigoMorse;
-
-      //exibe o código Morse acumulado no LCD
-      lcd_1.setCursor(0, 0);
-      lcd_1.print("telegrama:"); //limpa o título da linha 0
-      lcd_1.setCursor(0, 1); //define a posição para a linha 1
-      lcd_1.print(morseAcumulado);  //imprime o código Morse acumulado
-
-      //se a palavra tiver mais de 16 caracteres, inicia o deslocamento
-      if (morseAcumulado.length() > 16) {
-        lcd_1.scrollDisplayLeft();  //move o texto para a esquerda
-      }
-
-      //transmite o código Morse (com som e LED)
-      for (int i = 0; i < codigoMorse.length(); i++) {
-        if (codigoMorse[i] == '.') {
-          digitalWrite(ledPin2, HIGH);
-          tone(buzzerPin, 1000);
-          delay(50);
-        } else if (codigoMorse[i] == '-') {
-          digitalWrite(ledPin2, HIGH);
-          tone(buzzerPin, 1000);
-          delay(100);
+        
+        //se o código Morse for válido
+        if (codigoMorse != "") {
+            Serial.print(caractere); //imprime o caractere no monitor serial
+            Serial.print(" -> ");
+            Serial.println(codigoMorse); //imprime o código Morse no monitor serial
+            
+            //adiciona o código Morse acumulado à variável morseAcumulado
+            if (morseAcumulado.length() > 0) morseAcumulado += " ";
+            morseAcumulado += codigoMorse;
+            
+            lcd_1.setCursor(0, 0);
+            lcd_1.print("telegrama:"); //exibe "telegrama:" no LCD
+            lcd_1.setCursor(0, 1);
+            lcd_1.print(morseAcumulado); //exibe o código Morse acumulado no LCD
+            if (morseAcumulado.length() > 16) lcd_1.scrollDisplayLeft();  // Se o código for muito longo, rola a tela
+            
+            //envia os sinais Morse para o LED e buzzer
+            for (int i = 0; i < codigoMorse.length(); i++) {
+                digitalWrite(ledPin2, HIGH); //acende o LED
+                tone(buzzerPin, 1000); //emite o tom no buzzer
+                delay(codigoMorse[i] == '.' ? 50 : 100); //duração do ponto ou traço
+                digitalWrite(ledPin2, LOW); //apaga o LED
+                noTone(buzzerPin); //desliga o buzzer
+                delay(100); //pausa entre os sinais
+            }
         }
-        digitalWrite(ledPin2, LOW);
-        noTone(buzzerPin);
-        delay(100);
-      }
     }
-  }
+}
+
+void loop() {
+    verificarBotao(); //verifica o botão e processa a entrada
+    processarLetra(); //processa as letras baseadas no Morse recebido
+    processarPalavra(); //processa as palavras (adicionando espaços)
+    verificarReset(); //verifica se o comando de reset foi recebido
+    processarEntradaSerial(); //processa os dados recebidos pela entrada serial
 }
