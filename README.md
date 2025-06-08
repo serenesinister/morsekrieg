@@ -1,3 +1,5 @@
+![](https://drive.usercontent.google.com/download?id=1e8e0ngEvxcHiZu0qFThF2XLDktoRRyCO&export=view)
+
 # MorseKrieg
 
 **MorseKrieg** é uma recriação interativa do uso do código Morse, inspirado nas táticas de comunicação utilizadas durante a Segunda Guerra Mundial. O projeto utiliza uma plataforma Arduino para simular uma estação de comunicação clandestina, permitindo a transmissão de telegramas por meio de sinais sonoros e visuais, promovendo uma experiência educativa e desafiadora.
